@@ -21,7 +21,7 @@ static unique_lock<mutex>salerLock;
 static unique_lock<mutex>customerLock;
 static condition_variable salerCV;
 static condition_variable customerCV;
-static queue<vector<int>> dataQ;
+static queue<vector<int>> dataQ;//vector[0] for cake,[1] for bread
 static int bread, cake;
 
 
