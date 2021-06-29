@@ -24,22 +24,18 @@ static condition_variable customerDataCV;
 static bool customerDataBool = true;
 static mutex customerSaleFinishMutex;
 static condition_variable customerSaleFinishCV;
-static unique_lock<mutex> dataLock(customerDataMutex);
-static unique_lock<mutex> saleFinishLock(customerSaleFinishMutex);
-static vector<int> customerSaleFinishBoolVector;
+static int customerIdSaleFinished=-1;
 
 static mutex salerMutex;
 static condition_variable salerCV;
 static mutex salerDataQueueMutex;
 static condition_variable salerDataQueueCV;
-static unique_lock<mutex>dataAvailableLock(salerDataQueueMutex, defer_lock);
-static unique_lock<mutex> salerLock(salerMutex, defer_lock);
+static bool salerQueueBool=true;
 
 int main()
 {
     int saler, customer;
     cin >> bread >> cake >> saler >> customer;
-    customerSaleFinishBoolVector = vector<int>(customer, 0);
     vector<thread>salerThreadP;
     static deque<thread> customerThreadQ;
     //新建一个队列存储顾客线程，在销售进程中从队列里取出进程处理完后结束线程
@@ -59,5 +55,5 @@ int main()
         t.join();
     }
     
-    cout << bread << cake;
+    cout << bread << " "<<cake;
 }
