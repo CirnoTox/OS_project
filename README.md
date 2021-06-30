@@ -1,39 +1,120 @@
-# Update 2021-06-28
-搭建了基础的框架
-
-
-
+同步发布在https://cirnotox.github.io/2021/06/28/OS-project/
 # 问题说明
 ## 原题 面包师问题
 面包师有很多面包和蛋糕，由 n 个销售人员销售。每个顾客进店后先取一个号，并且等着叫号。当一个销售人员空闲下来，就叫下一个号。请分别编写销售人员和顾客进程的程序，要求使用线程与条件变量实现。
-## 分析
+## 形式化分析
 给定已有面包x个、蛋糕y个；销售人员个数n；进店顾客数量c,每个顾客购买随机个面包和蛋糕；要求销售人员们根据顾客队列进行销售，如果只剩少量面包或蛋糕，则拒绝过量购买意愿的顾客，销售结束后返回剩余面包restx与蛋糕数量resty。
-## 代码架构分析
-运行执行文件后，通过标准输入获取x,y,n,c,标准输出返回restx,resty。
-### 主线程
-1. 标准输入获取数据
-2. 创建运行n个销售人员线程
-3. 创建运行c个顾客线程
-4. 标准输出数据
-5. join
-### 销售人员进程
-while(1){
-   1. sleep随机一段时间(模拟销售时间)
-   2. 准备处理数据，上锁
-   3. 从队列取数据、处理数据
-   4. cout<<顾客数据
-   5. if(过量) {
-        notify顾客线程
-        cout>>拒绝
-        notify_one(),退出
-      }
-   6. 销售并对全局数据进行操作
-   7. cout<<销售成功
-   8. 提醒顾客离开（customerSaleFinishCV）
-   9. 结束数据处理，解锁
+# 源码说明
+* 三个主文件`customer.cpp`,`OS_project.cpp`,`saler.cpp`
+* 一个辅助类`pcout.h`
+## 队列、向量与线程创建
+`deque`和`vector`有着`emplace_back()`这样的优秀成员函数，为他们传入`thread`模板参数后，`emplace_back()`可以帮助coder在向`deque`和`vector`添加数据的同时启动线程。
+```C++
+// 以i为参数，启动customer个customerThread线程
+for (auto i = 0; i < customer; ++i) {
+   customerThreadQ.emplace_back(customerThread,i);
 }
-### 顾客线程
-1. 上锁，等待其他的顾客线程生成好数据
-2. 生成购买的面包、蛋糕数
-3. 将数据发送到数据队列，解锁
-4. 等待直到销售完成
+```
+当然，创建线程以后一定要记得`join()`，不过就算忘了，C++也会通过报错提醒你。
+```C++
+for (thread& t : salerThreadP) {
+   t.join();
+}
+```
+## 随机数生成
+在customerThread线程中，顾客生成数据我使用了随机数，并且让这随机数服从以(1,4)为参数伽玛分布`gamma_distribution<>`，具体是这样调用的
+```cpp
+random_device rd;   
+mt19937 gen(rd());  
+gamma_distribution<> dist(1, 4);
+size_t needCake = size_t(dist(gen));
+```
+C++11开始，随机数有更好的调用方法，不过这不是这次课设的核心，随机数能用就行啦。
+## 数据上锁
+这里涉及到多线程地向队列存取数据，所以使用锁`unique_lock<>`来保证数据的顺序与安全性。
+```cpp
+//首先要有一个公共的互斥量mutex
+extern mutex customerDataMutex;
+//上锁的基本框架
+static void customerThread(size_t number)
+{
+   //用公共的互斥量实例化一个unique_lock
+   unique_lock<mutex> dataLock(customerDataMutex);
+   //实例化结束后就立刻锁上了！
+   //如果不想立刻上锁，可以在实例化时加上一个defer_lock参数，之后再用成员函数lock()上锁
+   ...//生成数据
+   //向队列存数据
+   dataQ.push(vector<size_t>{number,needBread,needCake});
+   //解锁
+   dataLock.unlock();
+   ...//do other things
+}
+```
+值得注意的是，`unique_lock`在执行构析函数时也会自动解锁，所以一个简单的互斥线程框架是：
+```cpp
+mutex m;//公共互斥量
+void thread()//并行的线程
+{
+   unique_lock<mutex>lock;
+   ...//do othert things, 期间一直上锁，直到最终执行完毕
+}
+```
+### 并行中的标准输出
+并行标准输出类`struct pcout`的原理就是借用了上述的原理。
+```cpp
+static inline mutex cout_mutex;//公共互斥量
+~pcout() {
+   lock_guard<mutex> l{ cout_mutex };//上锁
+   cout << rdbuf();//做输出
+   cout.flush();//刷新到屏幕
+}
+```
+## 条件变量
+至少使用一次的条件变量，使用在了`salerThread`和`customerThread`两个线程的通信中。`customerThread`在生成完数据后会进入条件变量的等待wait，`salerThread`线程操作数据结束后，会提醒notify`customerThread`结束。
+```cpp
+//公共互斥量，条件变量，条件
+extern mutex customerSaleFinishMutex;
+extern condition_variable customerSaleFinishCV;
+extern int customerIdSaleFinished;
+
+static void customerThread(size_t number)
+{
+   ...//生成数据部分
+   //条件变量必须与mutex和lock共同使用
+   unique_lock<mutex> saleFinishLock(customerSaleFinishMutex);
+   customerSaleFinishCV.wait(saleFinishLock,
+   //等待customerIdSaleFinished为变为当前线程序号
+      [&]() { return customerIdSaleFinished==number; });
+   pcout{} << "Customer " << number << " leave.\n";
+}
+
+static void salerThread(size_t number)
+{
+   while (1) {
+      ...//do some things
+      unique_lock<mutex> salerLock(salerMutex);//上锁
+      ...//处理数据
+      //提醒顾客离开
+      //因为处理数据时有上锁，就不用担心数据访问混乱
+      customerIdSaleFinished = customerId;
+      //notify所有顾客线程，确认条件customerIdSaleFinished情况
+		customerSaleFinishCV.notify_all();
+      salerLock.unlock();//解锁
+   }
+}
+```
+# 移植到Linux
+用git获取代码，然后各个文件都要多包含一些头文件
+```cpp
+#include <iostream>
+#include <vector>
+#include <thread>
+#include <mutex>
+#include <queue>
+#include<condition_variable>
+#include <sstream> //pcout.h下
+```
+G++编译指令：
+```
+g++ -o exefile.o OS_project.cpp saler.cpp customer.cpp pcout.h -fpermissive -pthread
+```
