@@ -144,7 +144,6 @@
   <ItemGroup>
     <ClCompile Include="customer.cpp" />
     <ClCompile Include="OS_project.cpp" />
-    <ClCompile Include="pcout.cpp" />
     <ClCompile Include="saler.cpp" />
   </ItemGroup>
   <ItemGroup>

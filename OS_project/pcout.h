@@ -4,8 +4,7 @@
 #include<iostream>
 #include<mutex>
 using namespace std;
-class pcout : public stringstream {
-public:
+struct pcout : public stringstream {
     static inline mutex cout_mutex;
     ~pcout() {
         lock_guard<mutex> l{ cout_mutex };
