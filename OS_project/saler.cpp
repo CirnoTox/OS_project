@@ -1,4 +1,4 @@
-//ÏúÊÛÈËÔ±Ïß³Ì
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ß³ï¿½
 #pragma once
 #include"pcout.h"
 #include<iostream>
@@ -6,6 +6,8 @@
 #include<queue>
 #include<random>
 #include <mutex>
+#include<condition_variable>
+#include<thread>
 using namespace std;
 
 extern size_t cake;
@@ -18,31 +20,31 @@ extern queue<vector<size_t>> dataQ;
 
 static void salerThread(size_t number)
 {
-	while (1) {//³ÖÐøÔËÐÐ
-		/******************ÏúÊÛ¿ªÊ¼*******************************/
+	while (1) {//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		/******************ï¿½ï¿½ï¿½Û¿ï¿½Ê¼*******************************/
 		pcout{} << "Saler " << number << " Begin.\n";
 		random_device rd;
 		mt19937 gen(rd());
 		uniform_int_distribution<> dist(1, 2000);
 		auto sleepTime = dist(gen);
 		this_thread::sleep_for(chrono::milliseconds(sleepTime));
-		//wait()½â³ý×èÈûºóÏÈµÈ´ýsleepTimeµÄÊ±¼ä
-		//Ä£ÄâÏúÊÛ»¨·ÑµÄÊ±¼ä
+		//wait()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÈµÈ´ï¿½sleepTimeï¿½ï¿½Ê±ï¿½ï¿½
+		//Ä£ï¿½ï¿½ï¿½ï¿½ï¿½Û»ï¿½ï¿½Ñµï¿½Ê±ï¿½ï¿½
 		unique_lock<mutex> salerLock(salerMutex);
-		/******************ÅÐ¶ÏÊý¾Ý¶ÓÁÐÇé¿ö*******************************/
+		/******************ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½Ý¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*******************************/
 		if (dataQ.empty()) {
 			pcout{} << "No customer, Saler " << number << " End.\n";
-			break;//½áÊøÔËÐÐ
+			break;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		}
-		/******************ÅÐ¶ÏÊý¾Ý¶ÓÁÐÇé¿ö*******************************/
+		/******************ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½Ý¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*******************************/
 
-		/********************Êý¾Ý²Ù×÷***********************************/
+		/********************ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½***********************************/
 		auto serveCustomer = dataQ.front();
 		dataQ.pop();
 		auto customerId = serveCustomer[0];
 		if(serveCustomer[1]>bread|| serveCustomer[2]>cake){
 			customerIdSaleFinished = customerId;
-			customerSaleFinishCV.notify_all();//ÌáÐÑ¹Ë¿ÍÀë¿ª
+			customerSaleFinishCV.notify_all();//ï¿½ï¿½ï¿½Ñ¹Ë¿ï¿½ï¿½ë¿ª
 			pcout{} << "Customer " << customerId <<
 				" need "<< serveCustomer[1] << " breads " <<
 				serveCustomer[2] << " cakes"
@@ -52,16 +54,16 @@ static void salerThread(size_t number)
 		}
 		bread -= serveCustomer[1];
 		cake -= serveCustomer[2];
-		/********************Êý¾Ý²Ù×÷***********************************/
+		/********************ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½***********************************/
 
 		pcout{} << "Saler" << number << " sold Customer " 
 			<< customerId << " with " <<serveCustomer[1]<<" breads "<< 
 			serveCustomer[2]<<" cakes" << " End.\n";
-		/******************ÌáÐÑ¹Ë¿ÍÀë¿ª***************************/
+		/******************ï¿½ï¿½ï¿½Ñ¹Ë¿ï¿½ï¿½ë¿ª***************************/
 		customerIdSaleFinished = customerId;
 		customerSaleFinishCV.notify_all();
-		/******************ÌáÐÑ¹Ë¿ÍÀë¿ª***************************/
+		/******************ï¿½ï¿½ï¿½Ñ¹Ë¿ï¿½ï¿½ë¿ª***************************/
 		salerLock.unlock();
-		/******************ÏúÊÛ½áÊø*******************************/
+		/******************ï¿½ï¿½ï¿½Û½ï¿½ï¿½ï¿½*******************************/
 	}
 }

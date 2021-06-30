@@ -4,7 +4,6 @@
 3. 创建运行c个顾客线程
 4. 标准输出数据
 */
-#pragma once
 #include"saler.cpp"
 #include"customer.cpp"
 #include"pcout.h"
@@ -13,6 +12,7 @@
 #include <thread>
 #include <mutex>
 #include <queue>
+#include<condition_variable>
 using namespace std;
 
 //初始化mutex, condition_variable

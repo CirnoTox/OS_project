@@ -1,4 +1,4 @@
-//¹Ë¿ÍÏß³Ì
+//ï¿½Ë¿ï¿½ï¿½ß³ï¿½
 #pragma once
 #include"pcout.h"
 #include<iostream>
@@ -6,6 +6,8 @@
 #include<queue>
 #include<random>
 #include <mutex>
+#include<condition_variable>
+#include<thread>
 using namespace std;
 
 extern queue<vector<size_t>> dataQ;
@@ -18,13 +20,13 @@ extern int customerIdSaleFinished;
 
 static void customerThread(size_t number)
 {
-    /*******************¹Ë¿ÍÏß³ÌÉú³ÉÊý¾Ý*******************************/
+    /*******************ï¿½Ë¿ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*******************************/
     unique_lock<mutex> dataLock(customerDataMutex);
     pcout{} << "Customer " << number << " come.\n";
     random_device rd;   
     mt19937 gen(rd());  
     gamma_distribution<> dist(1, 4);
-    //Éú³É´Ó0µ½cakeÈý·ÖÖ®Ò»×ÜÁ¿µÄËæ»úÊý
+    //ï¿½ï¿½ï¿½É´ï¿½0ï¿½ï¿½cakeï¿½ï¿½ï¿½ï¿½Ö®Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     size_t needCake = size_t(dist(gen));
     size_t needBread;
     if (needCake == 0) {//
@@ -36,13 +38,13 @@ static void customerThread(size_t number)
     }
 	dataQ.push(vector<size_t>{number,needBread,needCake});
     dataLock.unlock();
-    /*******************¹Ë¿ÍÏß³ÌÉú³ÉÊý¾Ý*******************************/
+    /*******************ï¿½Ë¿ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*******************************/
 
-    /*******************¹Ë¿ÍÏß³ÌµÈ´ýÀë¿ª*******************************/
+    /*******************ï¿½Ë¿ï¿½ï¿½ß³ÌµÈ´ï¿½ï¿½ë¿ª*******************************/
     unique_lock<mutex> saleFinishLock(customerSaleFinishMutex);
     customerSaleFinishCV.wait(saleFinishLock,
         [&]() { return customerIdSaleFinished==number; });
 
     pcout{} << "Customer " << number << " leave.\n";
-    /*******************¹Ë¿ÍÏß³ÌµÈ´ýÀë¿ª*******************************/
+    /*******************ï¿½Ë¿ï¿½ï¿½ß³ÌµÈ´ï¿½ï¿½ë¿ª*******************************/
 }

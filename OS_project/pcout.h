@@ -1,7 +1,8 @@
-//pcoutÀà ±£Ö¤coutÊä³ö²»´®ÐÐ
+//pcoutï¿½ï¿½ ï¿½ï¿½Ö¤coutï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #pragma once
 #include<string>
 #include<iostream>
+#include <sstream>
 #include<mutex>
 using namespace std;
 struct pcout : public stringstream {
