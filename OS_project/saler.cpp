@@ -1,5 +1,6 @@
 //销售人员线程
 #pragma once
+#include"pcout.h"
 #include<iostream>
 #include<vector>
 #include<queue>
@@ -7,23 +8,19 @@
 #include <mutex>
 using namespace std;
 
-extern int cake;
-extern int bread;
+extern size_t cake;
+extern size_t bread;
 extern mutex salerMutex;
-extern condition_variable salerCV;
 extern condition_variable customerSaleFinishCV;
 extern int customerIdSaleFinished;
-extern queue<vector<int>> dataQ;
+extern queue<vector<size_t>> dataQ;
 //vector[0] for id,[1] for bread,[2] for cake
-extern mutex salerDataQueueMutex;
-extern condition_variable salerDataQueueCV;
-extern bool salerQueueBool;
 
 static void salerThread(size_t number)
 {
 	while (1) {//持续运行
 		/******************销售开始*******************************/
-		cout << "Saler" << number << " Begin." << endl;
+		pcout{} << "Saler " << number << " Begin.\n";
 		random_device rd;
 		mt19937 gen(rd());
 		uniform_int_distribution<> dist(1, 2000);
@@ -34,7 +31,7 @@ static void salerThread(size_t number)
 		unique_lock<mutex> salerLock(salerMutex);
 		/******************判断数据队列情况*******************************/
 		if (dataQ.empty()) {
-			cout << "No data salerThread" << number << " End." << endl;
+			pcout{} << "No customer, Saler " << number << " End.\n";
 			break;//结束运行
 		}
 		/******************判断数据队列情况*******************************/
@@ -45,8 +42,11 @@ static void salerThread(size_t number)
 		auto customerId = serveCustomer[0];
 		if(serveCustomer[1]>bread|| serveCustomer[2]>cake){
 			customerIdSaleFinished = customerId;
-			customerSaleFinishCV.notify_all();
-			cout << "Saler" << number << " rejected." << endl;
+			customerSaleFinishCV.notify_all();//提醒顾客离开
+			pcout{} << "Customer " << customerId <<
+				" need "<< serveCustomer[1] << " breads " <<
+				serveCustomer[2] << " cakes"
+				", rejected by Saler "<< number<<".\n";
 			salerLock.unlock();
 			continue;
 		}
@@ -54,11 +54,13 @@ static void salerThread(size_t number)
 		cake -= serveCustomer[2];
 		/********************数据操作***********************************/
 
+		pcout{} << "Saler" << number << " sold Customer " 
+			<< customerId << " with " <<serveCustomer[1]<<" breads "<< 
+			serveCustomer[2]<<" cakes" << " End.\n";
 		/******************提醒顾客离开***************************/
 		customerIdSaleFinished = customerId;
 		customerSaleFinishCV.notify_all();
 		/******************提醒顾客离开***************************/
-		cout << "Saler" << number << " End." << endl;
 		salerLock.unlock();
 		/******************销售结束*******************************/
 	}

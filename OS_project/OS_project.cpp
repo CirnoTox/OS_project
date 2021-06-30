@@ -7,6 +7,7 @@
 #pragma once
 #include"saler.cpp"
 #include"customer.cpp"
+#include"pcout.h"
 #include <iostream>
 #include <vector>
 #include <thread>
@@ -15,26 +16,20 @@
 using namespace std;
 
 //初始化mutex, condition_variable
-static queue<vector<int>> dataQ;
+static queue<vector<size_t>> dataQ;
 //vector[0] for id,[1] for bread,[2] for cake
 static int bread, cake;
 
 static mutex customerDataMutex;
-static condition_variable customerDataCV;
-static bool customerDataBool = true;
 static mutex customerSaleFinishMutex;
 static condition_variable customerSaleFinishCV;
 static int customerIdSaleFinished=-1;
 
 static mutex salerMutex;
-static condition_variable salerCV;
-static mutex salerDataQueueMutex;
-static condition_variable salerDataQueueCV;
-static bool salerQueueBool=true;
 
 int main()
 {
-    int saler, customer;
+    size_t saler, customer;
     cin >> bread >> cake >> saler >> customer;
     vector<thread>salerThreadP;
     static deque<thread> customerThreadQ;
@@ -55,5 +50,5 @@ int main()
         t.join();
     }
     
-    cout << bread << " "<<cake;
+    pcout{} << bread << " " << cake << "\n";
 }

@@ -1,5 +1,6 @@
 //顾客线程
 #pragma once
+#include"pcout.h"
 #include<iostream>
 #include<vector>
 #include<queue>
@@ -7,12 +8,10 @@
 #include <mutex>
 using namespace std;
 
-extern queue<vector<int>> dataQ;
-extern int cake;
-extern int bread;
+extern queue<vector<size_t>> dataQ;
+extern size_t cake;
+extern size_t bread;
 extern mutex customerDataMutex;
-extern condition_variable customerDataCV;
-extern bool customerDataBool;
 extern mutex customerSaleFinishMutex;
 extern condition_variable customerSaleFinishCV;
 extern int customerIdSaleFinished;
@@ -21,21 +20,21 @@ static void customerThread(size_t number)
 {
     /*******************顾客线程生成数据*******************************/
     unique_lock<mutex> dataLock(customerDataMutex);
-    cout << "customer" << number << " come" << endl;
+    pcout{} << "Customer " << number << " come.\n";
     random_device rd;   
     mt19937 gen(rd());  
-    uniform_int_distribution<> dist(0, cake/30); 
+    gamma_distribution<> dist(1, 4);
     //生成从0到cake三分之一总量的随机数
-    int needCake=dist(gen);
-    int needBread;
+    size_t needCake = size_t(dist(gen));
+    size_t needBread;
     if (needCake == 0) {//
-        uniform_int_distribution<> newDist(1, bread /30);
-        needBread = newDist(gen);
+        gamma_distribution<> newDist(1, 4);
+        needBread = size_t(newDist(gen))+1;
     }
     else {
-        needBread=dist(gen);
+        needBread= size_t(dist(gen));
     }
-	dataQ.push(vector<int>{int(number),needBread,needCake});
+	dataQ.push(vector<size_t>{number,needBread,needCake});
     dataLock.unlock();
     /*******************顾客线程生成数据*******************************/
 
@@ -44,6 +43,6 @@ static void customerThread(size_t number)
     customerSaleFinishCV.wait(saleFinishLock,
         [&]() { return customerIdSaleFinished==number; });
 
-	cout << "customer"<<number<<" leave" << endl;
+    pcout{} << "Customer " << number << " leave.\n";
     /*******************顾客线程等待离开*******************************/
 }
