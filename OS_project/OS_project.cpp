@@ -27,6 +27,9 @@ static int customerIdSaleFinished=-1;
 
 static mutex salerMutex;
 
+static vector<int> testSaleQueue;
+static vector<int> testCustQueue;
+
 int main()
 {
     size_t saler, customer;
@@ -40,6 +43,8 @@ int main()
     //线程池 方便管理线程
     for (auto i = 0; i < customer; ++i) {
         customerThreadQ.emplace_back(customerThread,i);
+        this_thread::sleep_for(10ms);
+
     }
     while (dataQ.size() != customer) { ; }
     //忙等待顾客生成好数据
@@ -52,6 +57,11 @@ int main()
     for (thread& t : customerThreadQ) {
         t.join();
     }
-    
-    pcout{} << bread << " " << cake << "\n";
+    for(auto i:testCustQueue){
+        cout<<i<<endl;
+    }
+    for(auto i:testSaleQueue){
+        cout<<i<<endl;
+    }
+    pcout{} <<"剩余面包："<< bread << " 剩余蛋糕：" << cake << "\n";
 }

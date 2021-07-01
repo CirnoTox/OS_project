@@ -17,16 +17,17 @@ extern mutex customerDataMutex;
 extern mutex customerSaleFinishMutex;
 extern condition_variable customerSaleFinishCV;
 extern int customerIdSaleFinished;
+extern vector<int> testCustQueue;
 
 static void customerThread(size_t number)
 {
-    /*******************�˿��߳���������*******************************/
+    /*******************顾客线程生成数据*******************************/
     unique_lock<mutex> dataLock(customerDataMutex);
     pcout{} << "Customer " << number << " come.\n";
     random_device rd;   
     mt19937 gen(rd());  
     gamma_distribution<> dist(1, 4);
-    //���ɴ�0��cake����֮һ�����������
+    //生成从0到cake三分之一总量的随机数
     size_t needCake = size_t(dist(gen));
     size_t needBread;
     if (needCake == 0) {//
@@ -37,14 +38,16 @@ static void customerThread(size_t number)
         needBread= size_t(dist(gen));
     }
 	dataQ.push(vector<size_t>{number,needBread,needCake});
+    testCustQueue.push_back(number);
     dataLock.unlock();
-    /*******************�˿��߳���������*******************************/
+    /*******************顾客线程生成数据*******************************/
 
-    /*******************�˿��̵߳ȴ��뿪*******************************/
+    /*******************顾客线程等待离开*******************************/
     unique_lock<mutex> saleFinishLock(customerSaleFinishMutex);
     customerSaleFinishCV.wait(saleFinishLock,
         [&]() { return customerIdSaleFinished==number; });
 
     pcout{} << "Customer " << number << " leave.\n";
-    /*******************�˿��̵߳ȴ��뿪*******************************/
+    /*******************顾客线程等待离开*******************************/
+    return;
 }
