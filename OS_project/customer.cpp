@@ -8,9 +8,10 @@
 #include <mutex>
 using namespace std;
 
-extern queue<vector<size_t>> dataQ;
 extern size_t cake;
 extern size_t bread;
+extern queue<vector<size_t>> dataQ;
+
 extern mutex customerDataMutex;
 extern mutex customerSaleFinishMutex;
 extern condition_variable customerSaleFinishCV;

@@ -16,9 +16,9 @@
 using namespace std;
 
 //初始化mutex, condition_variable
+static size_t bread, cake;
 //vector[0] for id,[1] for bread,[2] for cake
 static queue<vector<size_t>> dataQ;
-static size_t bread, cake;
 
 static mutex customerDataMutex;
 static mutex customerSaleFinishMutex;
@@ -34,22 +34,22 @@ int main()
     cout << "总共的蛋糕："; cin >> cake;
     cout << "销售人员个数："; cin >> saler;
     cout << "顾客个数："; cin >> customer;
-    vector<thread>salerThreadP;
-    static deque<thread> customerThreadQ;
-    //新建一个队列存储顾客线程，在销售进程中从队列里取出进程处理完后结束线程
+    vector<thread>salerThreadPool;
+    vector<thread> customerThreadPool;
     //线程池 方便管理线程
     for (auto i = 0; i < customer; ++i) {
-        customerThreadQ.emplace_back(customerThread,i);
+        customerThreadPool.emplace_back(customerThread,i);
+        this_thread::sleep_for(10ms);
     }
     while (dataQ.size() != customer) { ; }
     //忙等待顾客生成好数据
     for (size_t i{ 0 }; i < saler; ++i) {
-        salerThreadP.emplace_back(salerThread,i);
+        salerThreadPool.emplace_back(salerThread,i);
     }
-    for (thread& t : salerThreadP) {
+    for (thread& t : customerThreadPool) {
         t.join();
     }
-    for (thread& t : customerThreadQ) {
+    for (thread& t : salerThreadPool) {
         t.join();
     }
     
