@@ -103,7 +103,7 @@ static void salerThread(size_t number)
    }
 }
 ```
-# 移植到Linux
+# 从windows移植到Linux
 用git获取代码，然后各个文件都要多包含一些头文件
 ```cpp
 #include <iostream>
@@ -114,6 +114,7 @@ static void salerThread(size_t number)
 #include<condition_variable>
 #include <sstream> //pcout.h下
 ```
+## 现在可以直接从Linux分支下克隆了
 G++编译指令：
 ```
 g++ -o exefile.o OS_project.cpp saler.cpp customer.cpp pcout.h -fpermissive -pthread
