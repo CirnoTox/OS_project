@@ -32,7 +32,7 @@ static void salerThread(size_t number)
 		/******************判断数据队列情况*******************************/
 		if (dataQ.empty()) {
 			pcout{} << "No customer, Saler " << number << " End.\n";
-			break;//结束运行
+			return;//结束运行
 		}
 		/******************判断数据队列情况*******************************/
 
@@ -64,4 +64,6 @@ static void salerThread(size_t number)
 		salerLock.unlock();
 		/******************销售结束*******************************/
 	}
+	pcout{} << "return";
+	return;
 }

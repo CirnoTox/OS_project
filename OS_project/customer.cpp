@@ -46,4 +46,5 @@ static void customerThread(size_t number)
 
     pcout{} << "Customer " << number << " leave.\n";
     /*******************顾客线程等待离开*******************************/
+    return;
 }
